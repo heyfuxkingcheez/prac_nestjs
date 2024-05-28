@@ -27,11 +27,14 @@ export class PostsService {
     }
   }
 
-  async createPost(dto: CreatePostReqDto): Promise<PostsModel> {
+  async createPost(
+    authorId: string,
+    dto: CreatePostReqDto,
+  ): Promise<PostsModel> {
     try {
       const post = this.postsRepo.create({
         author: {
-          id: dto.author,
+          id: authorId,
         },
         title: dto.title,
         content: dto.content,

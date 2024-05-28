@@ -7,10 +7,13 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { PostsModel } from './entities';
 import { CreatePostReqDto, UpdatePostReqDto } from './dto';
+import { AccessTokenGuard } from 'src/auth/guard/bearer-token.guard';
+import { User } from 'src/users/decorator';
 
 @Controller('posts')
 export class PostsController {
@@ -29,8 +32,12 @@ export class PostsController {
   }
 
   @Post()
-  async createPost(@Body() dto: CreatePostReqDto): Promise<PostsModel> {
-    return await this.postsService.createPost(dto);
+  @UseGuards(AccessTokenGuard)
+  async createPost(
+    @Body() dto: CreatePostReqDto,
+    @User('id') userId: string,
+  ): Promise<PostsModel> {
+    return await this.postsService.createPost(userId, dto);
   }
 
   @Put(':id')
