@@ -36,8 +36,7 @@ export class PostsService {
         author: {
           id: authorId,
         },
-        title: dto.title,
-        content: dto.content,
+        ...dto,
         likeCount: 0,
         commentCount: 0,
       });

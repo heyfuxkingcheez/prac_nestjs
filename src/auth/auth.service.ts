@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersModel } from 'src/users/entities';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
+import { RegisterUserReqDto } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -60,9 +61,7 @@ export class AuthService {
     return this.loginUser(existingUser);
   }
 
-  async registerWithEmail(
-    user: Pick<UsersModel, 'nickname' | 'email' | 'password'>,
-  ) {
+  async registerWithEmail(user: RegisterUserReqDto) {
     const hashRounds = this.configService.get<number>('HASH_ROUNDS');
 
     const hash = bcrypt.hashSync(user.password, +hashRounds);

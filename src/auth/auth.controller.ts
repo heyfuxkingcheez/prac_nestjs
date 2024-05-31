@@ -1,7 +1,7 @@
 import { Body, Controller, Headers, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateUserReqDto } from './dto/createUser.req.dto';
-import { PasswordPipe } from './pipe/password.pipe';
+import { RegisterUserReqDto } from './dto';
+
 import { BsaicTokenGuard } from './guard/basic-token.guard';
 import { RefreshTokenGuard } from './guard/bearer-token.guard';
 
@@ -44,12 +44,7 @@ export class AuthController {
   }
 
   @Post('register')
-  postRegisterEmail(@Body() dto: CreateUserReqDto) {
-    const passwordValidationPipe = new PasswordPipe();
-    dto.password = passwordValidationPipe.transform(dto.password, {
-      type: 'body',
-      data: 'password',
-    });
+  postRegisterEmail(@Body() dto: RegisterUserReqDto) {
     return this.authService.registerWithEmail(dto);
   }
 }

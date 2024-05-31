@@ -5,8 +5,8 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
-  Put,
   UseGuards,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
@@ -40,7 +40,7 @@ export class PostsController {
     return await this.postsService.createPost(userId, dto);
   }
 
-  @Put(':id')
+  @Patch(':id')
   async updatePost(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdatePostReqDto,
