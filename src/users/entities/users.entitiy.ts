@@ -8,6 +8,7 @@ import {
   lengthValidationMessage,
   stringValidationMessage,
 } from 'src/common/validation-message';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 export class UsersModel extends BaseEntity {
@@ -39,6 +40,18 @@ export class UsersModel extends BaseEntity {
     message: lengthValidationMessage,
   })
   @Column({ nullable: false })
+  /**
+   * Request
+   * frontend -> backend
+   * plain obj (JSON) -> class instance (DTO)
+   *
+   * Response
+   * backend -> frontend
+   * class instance (DTO) -> plain obj (JSON)
+   */
+  @Exclude({
+    toPlainOnly: true,
+  })
   password: string;
 
   @Column({

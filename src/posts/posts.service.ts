@@ -12,7 +12,9 @@ export class PostsService {
   ) {}
 
   async getAllPosts() {
-    return await this.postsRepo.find();
+    return await this.postsRepo.find({
+      relations: ['author'],
+    });
   }
 
   async getPostById(id: string): Promise<PostsModel | null> {
