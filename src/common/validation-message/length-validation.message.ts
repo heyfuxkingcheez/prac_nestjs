@@ -1,4 +1,4 @@
-import { ValidationArguments } from 'class-validator';
+import { ValidationArguments } from "class-validator";
 
 export const lengthValidationMessage = (args: ValidationArguments) => {
   // value -> 입력된 값

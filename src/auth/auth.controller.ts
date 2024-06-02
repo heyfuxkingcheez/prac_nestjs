@@ -1,17 +1,17 @@
-import { Body, Controller, Headers, Post, UseGuards } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { RegisterUserReqDto } from './dto';
+import { Body, Controller, Headers, Post, UseGuards } from "@nestjs/common";
+import { AuthService } from "./auth.service";
+import { RegisterUserReqDto } from "./dto";
 
-import { BsaicTokenGuard } from './guard/basic-token.guard';
-import { RefreshTokenGuard } from './guard/bearer-token.guard';
+import { BsaicTokenGuard } from "./guard/basic-token.guard";
+import { RefreshTokenGuard } from "./guard/bearer-token.guard";
 
-@Controller('auth')
+@Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('token/access')
+  @Post("token/access")
   @UseGuards(RefreshTokenGuard)
-  postTokenAccess(@Headers('authorization') rawToken: string) {
+  postTokenAccess(@Headers("authorization") rawToken: string) {
     const token = this.authService.extractTokenFromHeader(rawToken, true);
 
     const newToken = this.authService.rotateToken(token, false);
@@ -21,9 +21,9 @@ export class AuthController {
     };
   }
 
-  @Post('token/refresh')
+  @Post("token/refresh")
   @UseGuards(RefreshTokenGuard)
-  postTokenRefresh(@Headers('authorization') rawToken: string) {
+  postTokenRefresh(@Headers("authorization") rawToken: string) {
     const token = this.authService.extractTokenFromHeader(rawToken, true);
 
     const newToken = this.authService.rotateToken(token, true);
@@ -33,9 +33,9 @@ export class AuthController {
     };
   }
 
-  @Post('login')
+  @Post("login")
   @UseGuards(BsaicTokenGuard)
-  postLoginEamil(@Headers('authorization') rawToken: string) {
+  postLoginEamil(@Headers("authorization") rawToken: string) {
     const token = this.authService.extractTokenFromHeader(rawToken, false);
 
     const credentials = this.authService.decodeBasicToken(token);
@@ -43,7 +43,7 @@ export class AuthController {
     return this.authService.loginWithEmail(credentials);
   }
 
-  @Post('register')
+  @Post("register")
   postRegisterEmail(@Body() dto: RegisterUserReqDto) {
     return this.authService.registerWithEmail(dto);
   }
