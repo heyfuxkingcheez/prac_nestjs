@@ -30,8 +30,35 @@ export class PostsService {
     }
   }
 
-  // 오름차 순으로 정렬하는 페이지네이션 구현
   async paginatePosts(dto: PaginatePostDto) {
+    if (dto.page) {
+      return this.pagePaginatePosts(dto);
+    } else {
+      return this.cursorPaginatePosts(dto);
+    }
+  }
+
+  async pagePaginatePosts(dto: PaginatePostDto) {
+    /**
+     * data: Data[],
+     * total: number,
+     *
+     * [1], [2], [3], [4]
+     */
+    const [posts, count] = await this.postsRepo.findAndCount({
+      skip: dto.take * (dto.page - 1),
+      take: dto.take,
+      order: {
+        createdAt: dto.order__createdAt,
+      },
+    });
+    return {
+      data: posts,
+      total: count,
+    };
+  }
+
+  async cursorPaginatePosts(dto: PaginatePostDto) {
     const where: FindOptionsWhere<PostsModel> = {};
 
     if (dto.where__postNum_less_than) {
@@ -100,7 +127,6 @@ export class PostsService {
       next: nextURL?.toString() ?? null,
     };
   }
-
   async getPostById(id: string): Promise<PostsModel | null> {
     try {
       const post = await this.postsRepo.findOne({ where: { id } });
