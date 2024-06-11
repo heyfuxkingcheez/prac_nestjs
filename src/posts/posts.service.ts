@@ -5,6 +5,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { CreatePostReqDto, UpdatePostReqDto } from "./dto";
 import { PaginatePostDto } from "./dto/paginate-post.dto";
 import { ConfigService } from "@nestjs/config";
+import { CommonService } from "src/common/common.service";
 
 @Injectable()
 export class PostsService {
@@ -12,6 +13,7 @@ export class PostsService {
     @InjectRepository(PostsModel)
     private readonly postsRepo: Repository<PostsModel>,
     private readonly configService: ConfigService,
+    private readonly commonService: CommonService,
   ) {}
 
   async getAllPosts() {
@@ -31,11 +33,12 @@ export class PostsService {
   }
 
   async paginatePosts(dto: PaginatePostDto) {
-    if (dto.page) {
-      return this.pagePaginatePosts(dto);
-    } else {
-      return this.cursorPaginatePosts(dto);
-    }
+    return this.commonService.paginate(dto, this.postsRepo, {}, "posts");
+    // if (dto.page) {
+    //   return this.pagePaginatePosts(dto);
+    // } else {
+    //   return this.cursorPaginatePosts(dto);
+    // }
   }
 
   async pagePaginatePosts(dto: PaginatePostDto) {
@@ -61,10 +64,10 @@ export class PostsService {
   async cursorPaginatePosts(dto: PaginatePostDto) {
     const where: FindOptionsWhere<PostsModel> = {};
 
-    if (dto.where__postNum_less_than) {
-      where.postNum = LessThan(dto.where__postNum_less_than);
-    } else if (dto.where__postNum_more_than) {
-      where.postNum = MoreThan(dto.where__postNum_more_than);
+    if (dto.where__postNum__less_than) {
+      where.postNum = LessThan(dto.where__postNum__less_than);
+    } else if (dto.where__postNum__more_than) {
+      where.postNum = MoreThan(dto.where__postNum__more_than);
     }
 
     const posts = await this.postsRepo.find({
@@ -90,7 +93,7 @@ export class PostsService {
 
       for (const key of Object.keys(dto)) {
         if (dto[key]) {
-          if (key !== "where__postNum_more_than" && key !== "where__postNum_less_than") {
+          if (key !== "where__postNum__more_than" && key !== "where__postNum__less_than") {
             nextURL.searchParams.append(key, dto[key]);
           }
         }
@@ -99,9 +102,9 @@ export class PostsService {
       let key = null;
 
       if (dto.order__createdAt === "ASC") {
-        key = "where__postNum_more_than";
+        key = "where__postNum__more_than";
       } else {
-        key = "where__postNum_less_than";
+        key = "where__postNum__less_than";
       }
 
       nextURL.searchParams.append(key, lastItem.postNum.toString());
