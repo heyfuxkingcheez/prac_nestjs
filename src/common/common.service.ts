@@ -233,7 +233,11 @@ export class CommonService {
       //   options[field] = FILTER_MAPPER[operator](values[0], values[1]);
       // } else {
       // }
-      options[field] = FILTER_MAPPER[operator](value);
+      if (operator === "i_like") {
+        options[field] = FILTER_MAPPER[operator](`%${value}%`);
+      } else {
+        options[field] = FILTER_MAPPER[operator](value);
+      }
     }
     return options;
   }
