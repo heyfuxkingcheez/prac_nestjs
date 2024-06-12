@@ -1,5 +1,8 @@
+import { Transform } from "class-transformer";
 import { IsString } from "class-validator";
+import { join } from "path";
 import { BaseEntity } from "src/common";
+import { POST_PUBLIC_IMAGE_PATH } from "src/common/const/path.const";
 import { stringValidationMessage } from "src/common/validation-message";
 import { UsersModel } from "src/users/entities/users.entitiy";
 import { Column, Entity, ManyToOne } from "typeorm";
@@ -31,6 +34,9 @@ export class PostsModel extends BaseEntity {
   @Column({
     nullable: true,
   })
+  @Transform(
+    ({ value }) => value && `/${join(POST_PUBLIC_IMAGE_PATH, value)}`,
+  )
   image?: string;
 
   @Column()

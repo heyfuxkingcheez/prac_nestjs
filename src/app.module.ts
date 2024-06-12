@@ -8,6 +8,8 @@ import { AuthModule } from "./auth/auth.module";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { APP_INTERCEPTOR } from "@nestjs/core";
 import { CommonModule } from "./common/common.module";
+import { ServeStaticModule } from "@nestjs/serve-static";
+import { PUBLIC_FOLDER_PATH } from "./common/const/path.const";
 
 @Module({
   imports: [
@@ -15,7 +17,6 @@ import { CommonModule } from "./common/common.module";
       envFilePath: `.env`,
       isGlobal: true,
     }),
-    PostsModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -31,8 +32,13 @@ import { CommonModule } from "./common/common.module";
       }),
     }),
     UsersModule,
+    PostsModule,
     AuthModule,
     CommonModule,
+    ServeStaticModule.forRoot({
+      rootPath: PUBLIC_FOLDER_PATH,
+      serveRoot: "/public",
+    }),
   ],
   controllers: [AppController],
   providers: [
