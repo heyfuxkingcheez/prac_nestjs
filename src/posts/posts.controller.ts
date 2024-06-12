@@ -1,4 +1,18 @@
-import { Body, ClassSerializerInterceptor, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  ClassSerializerInterceptor,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from "@nestjs/common";
 import { PostsService } from "./posts.service";
 import { PostsModel } from "./entities";
 import { CreatePostReqDto, UpdatePostReqDto } from "./dto";
@@ -6,6 +20,7 @@ import { AccessTokenGuard } from "src/auth/guard/bearer-token.guard";
 import { User } from "src/users/decorator";
 import { PaginatePostDto } from "./dto/paginate-post.dto";
 import { UsersModel } from "src/users/entities";
+import { FileInterceptor } from "@nestjs/platform-express";
 
 @Controller("posts")
 export class PostsController {
@@ -16,18 +31,32 @@ export class PostsController {
     return this.postsService.paginatePosts(Query);
   }
   @Get(":id")
-  async getPostById(@Param("id", ParseUUIDPipe) id: string): Promise<PostsModel> {
+  async getPostById(
+    @Param("id", ParseUUIDPipe) id: string,
+  ): Promise<PostsModel> {
     return this.postsService.getPostById(id);
   }
 
   @Post()
   @UseGuards(AccessTokenGuard)
-  async createPost(@Body() dto: CreatePostReqDto, @User("id") userId: string): Promise<PostsModel> {
-    return await this.postsService.createPost(userId, dto);
+  @UseInterceptors(FileInterceptor("image"))
+  async createPost(
+    @Body() dto: CreatePostReqDto,
+    @User("id") userId: string,
+    @UploadedFile() file?: Express.Multer.File,
+  ): Promise<PostsModel> {
+    return await this.postsService.createPost(
+      userId,
+      dto,
+      file?.filename,
+    );
   }
 
   @Patch(":id")
-  async updatePost(@Param("id", ParseUUIDPipe) id: string, @Body() dto: UpdatePostReqDto): Promise<PostsModel> {
+  async updatePost(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() dto: UpdatePostReqDto,
+  ): Promise<PostsModel> {
     return await this.postsService.updatePost(id, dto);
   }
 

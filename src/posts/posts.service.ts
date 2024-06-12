@@ -1,5 +1,10 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { FindOptionsWhere, LessThan, MoreThan, Repository } from "typeorm";
+import {
+  FindOptionsWhere,
+  LessThan,
+  MoreThan,
+  Repository,
+} from "typeorm";
 import { PostsModel } from "./entities";
 import { InjectRepository } from "@nestjs/typeorm";
 import { CreatePostReqDto, UpdatePostReqDto } from "./dto";
@@ -33,7 +38,14 @@ export class PostsService {
   }
 
   async paginatePosts(dto: PaginatePostDto) {
-    return this.commonService.paginate(dto, this.postsRepo, {}, "posts");
+    return this.commonService.paginate(
+      dto,
+      this.postsRepo,
+      {
+        relations: ["author"],
+      },
+      "posts",
+    );
     // if (dto.page) {
     //   return this.pagePaginatePosts(dto);
     // } else {
@@ -78,9 +90,14 @@ export class PostsService {
       take: dto.take,
     });
 
-    const lastItem = posts.length > 0 && posts.length === dto.take ? posts[posts.length - 1] : null;
+    const lastItem =
+      posts.length > 0 && posts.length === dto.take
+        ? posts[posts.length - 1]
+        : null;
 
-    const nextURL = lastItem && new URL(`${this.configService.get<string>("URL")}/posts`);
+    const nextURL =
+      lastItem &&
+      new URL(`${this.configService.get<string>("URL")}/posts`);
 
     if (nextURL) {
       /**
@@ -93,7 +110,10 @@ export class PostsService {
 
       for (const key of Object.keys(dto)) {
         if (dto[key]) {
-          if (key !== "where__postNum__more_than" && key !== "where__postNum__less_than") {
+          if (
+            key !== "where__postNum__more_than" &&
+            key !== "where__postNum__less_than"
+          ) {
             nextURL.searchParams.append(key, dto[key]);
           }
         }
@@ -142,13 +162,18 @@ export class PostsService {
     }
   }
 
-  async createPost(authorId: string, dto: CreatePostReqDto): Promise<PostsModel> {
+  async createPost(
+    authorId: string,
+    dto: CreatePostReqDto,
+    image?: string,
+  ): Promise<PostsModel> {
     try {
       const post = this.postsRepo.create({
         author: {
           id: authorId,
         },
         ...dto,
+        image,
         likeCount: 0,
         commentCount: 0,
       });
