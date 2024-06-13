@@ -4,17 +4,17 @@ import { CommonController } from "./common.controller";
 import { MulterModule } from "@nestjs/platform-express";
 import { extname } from "path";
 import * as multer from "multer";
-import {
-  POST_IMAGE_PATH,
-  TEMP_FOLDER_NAME,
-  TEMP_FOLDER_PATH,
-} from "./const/path.const";
+import { TEMP_FOLDER_PATH } from "./const/path.const";
 import { v4 as uuid } from "uuid";
 import { AuthModule } from "src/auth/auth.module";
 import { UsersModule } from "src/users/users.module";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { ImageModel } from "./entities";
+import { PostsModule } from "src/posts/posts.module";
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([ImageModel]),
     MulterModule.register({
       limits: {
         fileSize: 50000000,

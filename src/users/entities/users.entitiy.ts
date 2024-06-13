@@ -2,12 +2,16 @@ import { Column, Entity, OneToMany } from "typeorm";
 import { RolesEnum } from "../const/roles.const";
 import { PostsModel } from "src/posts/entities";
 import { IsEmail, IsString, Length } from "class-validator";
-import { emailValidationMessage, lengthValidationMessage, stringValidationMessage } from "src/common/validation-message";
+import {
+  emailValidationMessage,
+  lengthValidationMessage,
+  stringValidationMessage,
+} from "src/common/validation-message";
 import { Exclude } from "class-transformer";
-import { BaseEntity } from "src/common";
+import { BaseModel } from "src/common/entities";
 
 @Entity()
-export class UsersModel extends BaseEntity {
+export class UsersModel extends BaseModel {
   @Column({ length: 20, unique: true, nullable: false })
   @IsString({
     message: stringValidationMessage,

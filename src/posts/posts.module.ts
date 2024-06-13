@@ -6,15 +6,17 @@ import { PostsController } from "./posts.controller";
 import { AuthModule } from "src/auth/auth.module";
 import { UsersModule } from "src/users/users.module";
 import { CommonModule } from "src/common/common.module";
+import { ImageModel } from "src/common/entities";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PostsModel]),
+    TypeOrmModule.forFeature([PostsModel, ImageModel]),
     AuthModule,
     UsersModule,
     CommonModule,
   ],
   controllers: [PostsController],
   providers: [PostsService],
+  exports: [PostsService],
 })
 export class PostsModule {}

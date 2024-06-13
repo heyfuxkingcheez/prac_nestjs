@@ -17,24 +17,28 @@ import { ConfigService } from "@nestjs/config";
 import { CommonService } from "src/common/common.service";
 import {
   POST_IMAGE_PATH,
-  PUBLIC_FOLDER_PATH,
   TEMP_FOLDER_PATH,
 } from "src/common/const/path.const";
 import { promises } from "fs";
 import { basename, join } from "path";
+import { CreatePostImageDto } from "./images/dto/create-image.dto";
+import { ImageModel } from "src/common/entities";
+import { DEFAULT_POST_FIND_OPTIONS } from "./const/default-post-find-options.const";
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(PostsModel)
     private readonly postsRepo: Repository<PostsModel>,
+    @InjectRepository(ImageModel)
+    private readonly imagesRepo: Repository<ImageModel>,
     private readonly configService: ConfigService,
     private readonly commonService: CommonService,
   ) {}
 
   async getAllPosts() {
     return await this.postsRepo.find({
-      relations: ["author"],
+      ...DEFAULT_POST_FIND_OPTIONS,
     });
   }
 
@@ -44,6 +48,7 @@ export class PostsService {
       await this.createPost(userId, {
         title: `임의로 생성된 포스트 제목 ${i}`,
         content: `임의로 생성된 포스트 내용 ${i}`,
+        images: [],
       });
     }
   }
@@ -53,7 +58,7 @@ export class PostsService {
       dto,
       this.postsRepo,
       {
-        relations: ["author"],
+        ...DEFAULT_POST_FIND_OPTIONS,
       },
       "posts",
     );
@@ -163,7 +168,10 @@ export class PostsService {
   }
   async getPostById(id: string): Promise<PostsModel | null> {
     try {
-      const post = await this.postsRepo.findOne({ where: { id } });
+      const post = await this.postsRepo.findOne({
+        ...DEFAULT_POST_FIND_OPTIONS,
+        where: { id },
+      });
 
       if (!post) throw new NotFoundException();
 
@@ -173,11 +181,11 @@ export class PostsService {
     }
   }
 
-  async createPostImage(dto: CreatePostReqDto) {
+  async createPostImage(dto: CreatePostImageDto) {
     // dto의 이미지 이름을 기반으로
     // 파일에 경로를 생성한다.
 
-    const tmepFilePath = join(TEMP_FOLDER_PATH, dto.image);
+    const tmepFilePath = join(TEMP_FOLDER_PATH, dto.path);
 
     try {
       // 파일 존재하는지 확인
@@ -195,6 +203,12 @@ export class PostsService {
     // {프로젝트 경로}/public/posts/asdf.jpg
     const newPath = join(POST_IMAGE_PATH, fileName);
 
+    //save
+    const result = await this.imagesRepo.save({
+      ...dto,
+    });
+
+    // 파일 옮기기
     await promises.rename(tmepFilePath, newPath);
 
     return true;
@@ -210,6 +224,7 @@ export class PostsService {
           id: authorId,
         },
         ...dto,
+        images: [],
         likeCount: 0,
         commentCount: 0,
       });
@@ -224,6 +239,7 @@ export class PostsService {
 
   async updatePost(id: string, dto: UpdatePostReqDto) {
     const post = await this.postsRepo.findOne({
+      ...DEFAULT_POST_FIND_OPTIONS,
       where: {
         id,
       },

@@ -8,7 +8,9 @@ export class CreatePostReqDto extends PickType(PostsModel, [
   "title",
   "content",
 ]) {
-  @IsString()
+  @IsString({
+    each: true,
+  })
   @IsOptional()
-  image?: string;
+  images: string[] = [];
 }

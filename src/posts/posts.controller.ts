@@ -1,6 +1,5 @@
 import {
   Body,
-  ClassSerializerInterceptor,
   Controller,
   Delete,
   Get,
@@ -9,9 +8,7 @@ import {
   Patch,
   Post,
   Query,
-  UploadedFile,
   UseGuards,
-  UseInterceptors,
 } from "@nestjs/common";
 import { PostsService } from "./posts.service";
 import { PostsModel } from "./entities";
@@ -20,7 +17,7 @@ import { AccessTokenGuard } from "src/auth/guard/bearer-token.guard";
 import { User } from "src/users/decorator";
 import { PaginatePostDto } from "./dto/paginate-post.dto";
 import { UsersModel } from "src/users/entities";
-import { FileInterceptor } from "@nestjs/platform-express";
+import { ImageModelType } from "src/common/entities";
 
 @Controller("posts")
 export class PostsController {
@@ -43,9 +40,18 @@ export class PostsController {
     @Body() dto: CreatePostReqDto,
     @User("id") userId: string,
   ): Promise<PostsModel> {
-    await this.postsService.createPostImage(dto);
+    const post = await this.postsService.createPost(userId, dto);
 
-    return await this.postsService.createPost(userId, dto);
+    for (let i = 0; i < dto.images.length; i++) {
+      await this.postsService.createPostImage({
+        post,
+        order: i,
+        path: dto.images[i],
+        type: ImageModelType.POST_IMAGE,
+      });
+    }
+
+    return this.postsService.getPostById(post.id);
   }
 
   @Patch(":id")
