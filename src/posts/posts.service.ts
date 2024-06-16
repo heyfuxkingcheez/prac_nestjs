@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -16,13 +15,6 @@ import { CreatePostReqDto, UpdatePostReqDto } from "./dto";
 import { PaginatePostDto } from "./dto/paginate-post.dto";
 import { ConfigService } from "@nestjs/config";
 import { CommonService } from "src/common/common.service";
-import {
-  POST_IMAGE_PATH,
-  TEMP_FOLDER_PATH,
-} from "src/common/const/path.const";
-import { promises } from "fs";
-import { basename, join } from "path";
-import { CreatePostImageDto } from "./images/dto/create-image.dto";
 import { ImageModel } from "src/common/entities";
 import { DEFAULT_POST_FIND_OPTIONS } from "./const/default-post-find-options.const";
 
@@ -77,13 +69,14 @@ export class PostsService {
      *
      * [1], [2], [3], [4]
      */
-    const [posts, count] = await this.postsRepo.findAndCount({
-      skip: dto.take * (dto.page - 1),
-      take: dto.take,
-      order: {
-        createdAt: dto.order__createdAt,
-      },
-    });
+    const [posts, count] =
+      await this.postsRepo.findAndCount({
+        skip: dto.take * (dto.page - 1),
+        take: dto.take,
+        order: {
+          createdAt: dto.order__createdAt,
+        },
+      });
     return {
       data: posts,
       total: count,
@@ -94,9 +87,13 @@ export class PostsService {
     const where: FindOptionsWhere<PostsModel> = {};
 
     if (dto.where__postNum__less_than) {
-      where.postNum = LessThan(dto.where__postNum__less_than);
+      where.postNum = LessThan(
+        dto.where__postNum__less_than,
+      );
     } else if (dto.where__postNum__more_than) {
-      where.postNum = MoreThan(dto.where__postNum__more_than);
+      where.postNum = MoreThan(
+        dto.where__postNum__more_than,
+      );
     }
 
     const posts = await this.postsRepo.find({
@@ -114,7 +111,9 @@ export class PostsService {
 
     const nextURL =
       lastItem &&
-      new URL(`${this.configService.get<string>("URL")}/posts`);
+      new URL(
+        `${this.configService.get<string>("URL")}/posts`,
+      );
 
     if (nextURL) {
       /**
@@ -144,7 +143,10 @@ export class PostsService {
         key = "where__postNum__less_than";
       }
 
-      nextURL.searchParams.append(key, lastItem.postNum.toString());
+      nextURL.searchParams.append(
+        key,
+        lastItem.postNum.toString(),
+      );
     }
 
     /**
@@ -167,9 +169,13 @@ export class PostsService {
       next: nextURL?.toString() ?? null,
     };
   }
-  async getPostById(id: string): Promise<PostsModel | null> {
+  async getPostById(
+    id: string,
+    qr?: QueryRunner,
+  ): Promise<PostsModel | null> {
     try {
-      const post = await this.postsRepo.findOne({
+      const repository = this.getRepository(qr);
+      const post = await repository.findOne({
         ...DEFAULT_POST_FIND_OPTIONS,
         where: { id },
       });

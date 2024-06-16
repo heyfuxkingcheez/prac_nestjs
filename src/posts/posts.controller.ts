@@ -20,9 +20,11 @@ import { User } from "src/users/decorator";
 import { PaginatePostDto } from "./dto/paginate-post.dto";
 import { UsersModel } from "src/users/entities";
 import { ImageModelType } from "src/common/entities";
-import { DataSource } from "typeorm";
+import { DataSource, QueryRunner as QR } from "typeorm";
 import { PostsImagesService } from "./images/images.service";
 import { LogInterceptor } from "src/common/interceptors/log.interceptor";
+import { TransactionInterceptor } from "src/common/interceptors/transaction.interceptor";
+import { QueryRunner } from "src/common/decorators/query-runner.decorator";
 
 @Controller("posts")
 export class PostsController {
@@ -46,56 +48,33 @@ export class PostsController {
 
   @Post()
   @UseGuards(AccessTokenGuard)
+  @UseInterceptors(TransactionInterceptor)
   async createPost(
     @Body() dto: CreatePostReqDto,
     @User("id") userId: string,
+    @QueryRunner() qr: QR,
   ): Promise<PostsModel> {
-    // 트랜잭션과 관련된 모든 쿼리를 담당할
-    // 쿼리 러너를 생성한다.
-    const qr = this.dataSource.createQueryRunner();
-
-    // 쿼리 러너에 연결한다.
-    await qr.connect();
-
-    // 쿼리 러너에서 트랜잭션을 시작한다.
-    // 이 시점부터 같은 쿼리 러너를 사용하면
-    // 트랜잭션 안에서 데이터베이스 액션을 실행 할 수 있다.
-    await qr.startTransaction();
-
     // 로직 실행
-    try {
-      const post = await this.postsService.createPost(
-        userId,
-        dto,
+
+    const post = await this.postsService.createPost(
+      userId,
+      dto,
+      qr,
+    );
+
+    for (let i = 0; i < dto.images.length; i++) {
+      await this.postsImagesService.createPostImage(
+        {
+          post,
+          order: i,
+          path: dto.images[i],
+          type: ImageModelType.POST_IMAGE,
+        },
         qr,
       );
-
-      for (let i = 0; i < dto.images.length; i++) {
-        await this.postsImagesService.createPostImage(
-          {
-            post,
-            order: i,
-            path: dto.images[i],
-            type: ImageModelType.POST_IMAGE,
-          },
-          qr,
-        );
-      }
-      // 쿼리를 커밋한다.
-      await qr.commitTransaction();
-      // 쿼리 러너를 종료한다.
-      await qr.release();
-
-      return this.postsService.getPostById(post.id);
-    } catch (error) {
-      // 어떤 에러든 에러가 생기면
-      // 롤백한다.
-      await qr.rollbackTransaction();
-      // 쿼리 러너를 종료한다.
-      await qr.release();
-
-      throw new InternalServerErrorException("에러 발생");
     }
+
+    return this.postsService.getPostById(post.id, qr);
   }
 
   @Patch(":id")
