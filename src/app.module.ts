@@ -1,15 +1,25 @@
-import { ClassSerializerInterceptor, Module } from "@nestjs/common";
+import {
+  ClassSerializerInterceptor,
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { PostsModule } from "./posts/posts.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { UsersModule } from "./users/users.module";
 import { AuthModule } from "./auth/auth.module";
-import { ConfigModule, ConfigService } from "@nestjs/config";
+import {
+  ConfigModule,
+  ConfigService,
+} from "@nestjs/config";
 import { APP_INTERCEPTOR } from "@nestjs/core";
 import { CommonModule } from "./common/common.module";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { PUBLIC_FOLDER_PATH } from "./common/const/path.const";
+import { LogMiddleWare } from "./common/middlewares/log.middleware";
 
 @Module({
   imports: [
@@ -28,7 +38,8 @@ import { PUBLIC_FOLDER_PATH } from "./common/const/path.const";
         password: configService.get<string>("DB_PASSWORD"),
         database: configService.get<string>("DB_DATABASE"),
         autoLoadEntities: true,
-        synchronize: configService.get<string>("RUNTIME") !== "prod",
+        synchronize:
+          configService.get<string>("RUNTIME") !== "prod",
       }),
     }),
     UsersModule,
@@ -49,4 +60,11 @@ import { PUBLIC_FOLDER_PATH } from "./common/const/path.const";
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LogMiddleWare).forRoutes({
+      path: "*",
+      method: RequestMethod.ALL,
+    });
+  }
+}
