@@ -10,6 +10,7 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
 import { PostsService } from "./posts.service";
 import { PostsModel } from "./entities";
@@ -21,6 +22,7 @@ import { UsersModel } from "src/users/entities";
 import { ImageModelType } from "src/common/entities";
 import { DataSource } from "typeorm";
 import { PostsImagesService } from "./images/images.service";
+import { LogInterceptor } from "src/common/interceptors/log.interceptor";
 
 @Controller("posts")
 export class PostsController {
@@ -31,6 +33,7 @@ export class PostsController {
   ) {}
 
   @Get()
+  @UseInterceptors(LogInterceptor)
   async getAllPosts(@Query() Query: PaginatePostDto) {
     return this.postsService.paginatePosts(Query);
   }
