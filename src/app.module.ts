@@ -11,16 +11,13 @@ import { PostsModule } from "./posts/posts.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { UsersModule } from "./users/users.module";
 import { AuthModule } from "./auth/auth.module";
-import {
-  ConfigModule,
-  ConfigService,
-} from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { APP_INTERCEPTOR } from "@nestjs/core";
 import { CommonModule } from "./common/common.module";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { PUBLIC_FOLDER_PATH } from "./common/const/path.const";
 import { LogMiddleWare } from "./common/middlewares/log.middleware";
-import { ChatsModule } from './chats/chats.module';
+import { ChatsModule } from "./chats/chats.module";
 
 @Module({
   imports: [
@@ -39,14 +36,14 @@ import { ChatsModule } from './chats/chats.module';
         password: configService.get<string>("DB_PASSWORD"),
         database: configService.get<string>("DB_DATABASE"),
         autoLoadEntities: true,
-        synchronize:
-          configService.get<string>("RUNTIME") !== "prod",
+        synchronize: configService.get<string>("RUNTIME") !== "prod",
       }),
     }),
     UsersModule,
     PostsModule,
     AuthModule,
     CommonModule,
+    ChatsModule,
     ServeStaticModule.forRoot({
       rootPath: PUBLIC_FOLDER_PATH,
       serveRoot: "/public",

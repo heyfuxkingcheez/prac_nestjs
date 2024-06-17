@@ -1,6 +1,11 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { BasePaginationDto } from "./dto/base-pagination.dto";
-import { FindManyOptions, FindOptionsOrder, FindOptionsWhere, Repository } from "typeorm";
+import {
+  FindManyOptions,
+  FindOptionsOrder,
+  FindOptionsWhere,
+  Repository,
+} from "typeorm";
 import { FILTER_MAPPER } from "./const/filter-mapper.const";
 import { ConfigService } from "@nestjs/config";
 import { PostsModel } from "src/posts/entities";
@@ -9,7 +14,7 @@ import { PostsModel } from "src/posts/entities";
 export class CommonService {
   constructor(private readonly configService: ConfigService) {}
 
-  paginate<T extends PostsModel>(
+  paginate<T>(
     dto: BasePaginationDto,
     repository: Repository<T>,
     overrideFindOptions: FindManyOptions<T> = {},
@@ -22,7 +27,7 @@ export class CommonService {
     }
   }
 
-  private async pagePaginate<T extends PostsModel>(
+  private async pagePaginate<T>(
     dto: BasePaginationDto,
     repository: Repository<T>,
     overrideFindOptions: FindManyOptions<T> = {},
@@ -40,7 +45,7 @@ export class CommonService {
     };
   }
 
-  private async cursorPaginate<T extends PostsModel>(
+  private async cursorPaginate<T>(
     dto: BasePaginationDto,
     repository: Repository<T>,
     overrideFindOptions: FindManyOptions<T> = {},
@@ -59,9 +64,14 @@ export class CommonService {
     });
 
     const lastItem =
-      results.length > 0 && results.length === dto.take ? results[results.length - 1] : null;
+      results.length > 0 && results.length === dto.take
+        ? results[results.length - 1]
+        : null;
 
-    const nextURL = lastItem && new URL(`${this.configService.get<string>("URL")}/${path}`);
+    console.log(lastItem);
+
+    const nextURL =
+      lastItem && new URL(`${this.configService.get<string>("URL")}/${path}`);
 
     if (nextURL) {
       /**
@@ -74,7 +84,10 @@ export class CommonService {
 
       for (const key of Object.keys(dto)) {
         if (dto[key]) {
-          if (key !== "where__postNum__more_than" && key !== "where__postNum__less_than") {
+          if (
+            key !== "where__postNum__more_than" &&
+            key !== "where__postNum__less_than"
+          ) {
             nextURL.searchParams.append(key, dto[key]);
           }
         }
@@ -88,20 +101,20 @@ export class CommonService {
         key = "where__postNum__less_than";
       }
 
-      nextURL.searchParams.append(key, lastItem.postNum.toString());
+      nextURL.searchParams.append(key, (lastItem as any).postNum.toString());
     }
 
     return {
       data: results,
       cursor: {
-        after: lastItem?.postNum ?? null,
+        after: (lastItem as any)?.postNum ?? null,
       },
       count: results.length,
       next: nextURL?.toString() ?? null,
     };
   }
 
-  private composeFindOptions<T extends PostsModel>(dto: BasePaginationDto): FindManyOptions<T> {
+  private composeFindOptions<T>(dto: BasePaginationDto): FindManyOptions<T> {
     /**
      * where,
      * order,
@@ -161,7 +174,7 @@ export class CommonService {
     };
   }
 
-  private parseWhereFilter<T extends PostsModel>(
+  private parseWhereFilter<T>(
     key: string,
     value: any,
   ): FindOptionsWhere<T> | FindOptionsOrder<T> {

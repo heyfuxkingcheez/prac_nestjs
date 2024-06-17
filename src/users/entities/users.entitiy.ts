@@ -10,6 +10,7 @@ import {
 import { Exclude } from "class-transformer";
 import { BaseModel } from "src/common/entities";
 import { ChatsModel } from "src/chats/entitiies/chats.entity";
+import { MessagesModel } from "src/chats/messages/entities/messages.entity";
 
 @Entity()
 export class UsersModel extends BaseModel {
@@ -67,4 +68,7 @@ export class UsersModel extends BaseModel {
   @ManyToMany(() => ChatsModel, chat => chat.users)
   @JoinTable()
   chats: ChatsModel[];
+
+  @OneToMany(() => MessagesModel, message => message.author)
+  messages: MessagesModel;
 }
