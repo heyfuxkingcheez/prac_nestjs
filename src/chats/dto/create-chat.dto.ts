@@ -1,6 +1,6 @@
-import { IsNumber } from "class-validator";
+import { IsString } from "class-validator";
 
 export class CreateChatDto {
-  @IsNumber({}, { each: true })
+  @IsString({ each: true })
   userIds: string[];
 }
