@@ -13,8 +13,15 @@ import { ChatsService } from "./chats.service";
 import { EnterChatDto } from "./dto/enter-chat.dto";
 import { CreateMessagesDto } from "./messages/dto/create-messages.dto";
 import { MessagesService } from "./messages/messages.service";
-import { UseFilters, UsePipes, ValidationPipe } from "@nestjs/common";
+import {
+  UseFilters,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
+} from "@nestjs/common";
 import { SocketCatchHttpExceptionFilter } from "src/common/exception-filter/socket-catch-http.exceptionfilter";
+import { ScoketBearerTokenGuard } from "src/auth/guard";
+import { UsersModel } from "src/users/entities";
 
 @WebSocketGateway({
   // ws://localhost:3000/chats
@@ -43,10 +50,11 @@ export class ChatsGateway implements OnGatewayConnection {
     }),
   )
   @UseFilters(SocketCatchHttpExceptionFilter)
+  @UseGuards(ScoketBearerTokenGuard)
   @SubscribeMessage("create_chat")
   async createChat(
     @MessageBody() data: CreateChatDto,
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: Socket & { user: UsersModel },
   ) {
     const chat = await this.chatsService.createChat(data);
   }
