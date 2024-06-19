@@ -14,13 +14,13 @@ export class MessagesService {
     private readonly commonService: CommonService,
   ) {}
 
-  async createMessage(dto: CreateMessagesDto) {
+  async createMessage(dto: CreateMessagesDto, authorId: string) {
     const message = await this.messageRepo.save({
       chat: {
         id: dto.chatId,
       },
       author: {
-        id: dto.authorId,
+        id: authorId,
       },
       message: dto.message,
     });

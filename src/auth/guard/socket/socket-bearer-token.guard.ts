@@ -1,8 +1,9 @@
-import { CanActivate, ExecutionContext } from "@nestjs/common";
+import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { WsException } from "@nestjs/websockets";
 import { AuthService } from "src/auth/auth.service";
 import { UsersService } from "src/users/users.service";
 
+@Injectable()
 export class ScoketBearerTokenGuard implements CanActivate {
   constructor(
     private readonly authService: AuthService,
@@ -12,9 +13,9 @@ export class ScoketBearerTokenGuard implements CanActivate {
     const socket = context.switchToWs().getClient();
 
     const headers = socket.handshake.headers;
-    console.log(headers.authorization);
 
-    const rawToken = headers["authoriztion"];
+    const rawToken = headers["authorization"];
+    console.log(rawToken);
 
     if (!rawToken) throw new WsException("토큰이 없습니다.");
 
@@ -31,6 +32,7 @@ export class ScoketBearerTokenGuard implements CanActivate {
 
       return true;
     } catch (error) {
+      console.log(error);
       throw new WsException("토큰이 유효하지 않습니다.");
     }
   }
