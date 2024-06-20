@@ -1,16 +1,13 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
-  InternalServerErrorException,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
   Query,
-  UseFilters,
   UseGuards,
   UseInterceptors,
 } from "@nestjs/common";
@@ -24,10 +21,10 @@ import { UsersModel } from "src/users/entities";
 import { ImageModelType } from "src/common/entities";
 import { QueryRunner as QR } from "typeorm";
 import { PostsImagesService } from "./images/images.service";
-import { LogInterceptor } from "src/common/interceptors/log.interceptor";
 import { TransactionInterceptor } from "src/common/interceptors/transaction.interceptor";
 import { QueryRunner } from "src/common/decorators/query-runner.decorator";
-import { HttpExceptionFilter } from "src/common/exception-filter/http.exception-filter";
+import { Roles } from "src/users/decorator/roles.decorator";
+import { RolesEnum } from "src/users/const/roles.const";
 
 @Controller("posts")
 export class PostsController {
@@ -58,11 +55,7 @@ export class PostsController {
   ): Promise<PostsModel> {
     // 로직 실행
 
-    const post = await this.postsService.createPost(
-      userId,
-      dto,
-      qr,
-    );
+    const post = await this.postsService.createPost(userId, dto, qr);
 
     for (let i = 0; i < dto.images.length; i++) {
       await this.postsImagesService.createPostImage(
@@ -80,6 +73,7 @@ export class PostsController {
   }
 
   @Patch(":id")
+  @UseGuards(AccessTokenGuard)
   async updatePost(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() dto: UpdatePostReqDto,
@@ -88,6 +82,8 @@ export class PostsController {
   }
 
   @Delete(":id")
+  @UseGuards(AccessTokenGuard)
+  @Roles(RolesEnum.ADMIN)
   async deletePost(@Param("id", ParseUUIDPipe) id: string) {
     return await this.postsService.deletePost(id);
   }

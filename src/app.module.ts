@@ -18,6 +18,7 @@ import { ServeStaticModule } from "@nestjs/serve-static";
 import { PUBLIC_FOLDER_PATH } from "./common/const/path.const";
 import { LogMiddleWare } from "./common/middlewares/log.middleware";
 import { ChatsModule } from "./chats/chats.module";
+import { CommentsModule } from "./posts/comments/comments.module";
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ChatsModule } from "./chats/chats.module";
       serveRoot: "/public",
     }),
     ChatsModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [

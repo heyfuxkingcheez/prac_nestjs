@@ -8,7 +8,6 @@ import {
 } from "typeorm";
 import { FILTER_MAPPER } from "./const/filter-mapper.const";
 import { ConfigService } from "@nestjs/config";
-import { PostsModel } from "src/posts/entities";
 
 @Injectable()
 export class CommonService {
@@ -20,6 +19,7 @@ export class CommonService {
     overrideFindOptions: FindManyOptions<T> = {},
     path: string,
   ) {
+    console.log(dto);
     if (dto.page) {
       return this.pagePaginate(dto, repository, overrideFindOptions);
     } else {

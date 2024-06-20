@@ -60,7 +60,6 @@ export class ChatsGateway
     const headers = socket.handshake.headers;
 
     const rawToken = headers["authorization"];
-    console.log(rawToken);
 
     if (!rawToken) socket.disconnect();
 

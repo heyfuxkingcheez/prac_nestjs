@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import {
   FindOptionsWhere,
   LessThan,
@@ -69,14 +66,13 @@ export class PostsService {
      *
      * [1], [2], [3], [4]
      */
-    const [posts, count] =
-      await this.postsRepo.findAndCount({
-        skip: dto.take * (dto.page - 1),
-        take: dto.take,
-        order: {
-          createdAt: dto.order__createdAt,
-        },
-      });
+    const [posts, count] = await this.postsRepo.findAndCount({
+      skip: dto.take * (dto.page - 1),
+      take: dto.take,
+      order: {
+        createdAt: dto.order__createdAt,
+      },
+    });
     return {
       data: posts,
       total: count,
@@ -87,13 +83,9 @@ export class PostsService {
     const where: FindOptionsWhere<PostsModel> = {};
 
     if (dto.where__postNum__less_than) {
-      where.postNum = LessThan(
-        dto.where__postNum__less_than,
-      );
+      where.postNum = LessThan(dto.where__postNum__less_than);
     } else if (dto.where__postNum__more_than) {
-      where.postNum = MoreThan(
-        dto.where__postNum__more_than,
-      );
+      where.postNum = MoreThan(dto.where__postNum__more_than);
     }
 
     const posts = await this.postsRepo.find({
@@ -110,10 +102,7 @@ export class PostsService {
         : null;
 
     const nextURL =
-      lastItem &&
-      new URL(
-        `${this.configService.get<string>("URL")}/posts`,
-      );
+      lastItem && new URL(`${this.configService.get<string>("URL")}/posts`);
 
     if (nextURL) {
       /**
@@ -143,10 +132,7 @@ export class PostsService {
         key = "where__postNum__less_than";
       }
 
-      nextURL.searchParams.append(
-        key,
-        lastItem.postNum.toString(),
-      );
+      nextURL.searchParams.append(key, lastItem.postNum.toString());
     }
 
     /**
@@ -169,10 +155,7 @@ export class PostsService {
       next: nextURL?.toString() ?? null,
     };
   }
-  async getPostById(
-    id: string,
-    qr?: QueryRunner,
-  ): Promise<PostsModel | null> {
+  async getPostById(id: string, qr?: QueryRunner): Promise<PostsModel | null> {
     try {
       const repository = this.getRepository(qr);
       const post = await repository.findOne({
@@ -243,10 +226,17 @@ export class PostsService {
         id: postId,
       },
     });
-    console.log(post);
 
     if (!post) throw new NotFoundException();
 
     return await this.postsRepo.delete(postId);
+  }
+
+  async checkPostExistsById(postId: string): Promise<boolean> {
+    return await this.postsRepo.exists({
+      where: {
+        id: postId,
+      },
+    });
   }
 }
