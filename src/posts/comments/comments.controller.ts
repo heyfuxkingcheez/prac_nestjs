@@ -20,6 +20,7 @@ import { CommentsModel } from "./entities/comment.entity";
 import { UpdateCommentReqDto } from "./dto/update-comment-req.dto";
 import { PaginateCommentsDto } from "./dto/paginate-comment.dto";
 import { IsPublic } from "src/common/decorators/is-public.decorator";
+import { IsCommentMineOrAdminGuard } from "./guards/is-comment-mine-or-admin.guard";
 
 @Controller("posts/:postId/comments")
 export class CommentsController {
@@ -53,41 +54,39 @@ export class CommentsController {
   @Get(":commentId")
   @IsPublic()
   async getCommentById(
-    @Param("postId", ParseUUIDPipe) postId: string,
     @Param("commentId", ParseUUIDPipe) commentId: string,
   ): Promise<CommentsModel> {
-    const comment = await this.commentsService.getCommentById(
-      postId,
-      commentId,
-    );
+    const comment = await this.commentsService.getCommentById(commentId);
 
     return comment;
   }
 
   @Post()
   async createComment(
+    @Param("postId", ParseUUIDPipe) postId: string,
     @Body() dto: CreateCommentReqDto,
     @User("id", ParseUUIDPipe) userId: string,
   ): Promise<CommentsModel> {
-    const comment = await this.commentsService.createComment(userId, dto);
-    return comment;
-  }
-
-  @Patch(":commentId")
-  async updateComment(
-    @Body() dto: UpdateCommentReqDto,
-    @Param("commentId", ParseUUIDPipe) commentId: string,
-    @User("id", ParseUUIDPipe) userId: string,
-  ): Promise<CommentsModel> {
-    const comment = await this.commentsService.updateComment(
-      commentId,
+    const comment = await this.commentsService.createComment(
+      postId,
       userId,
       dto,
     );
     return comment;
   }
 
+  @Patch(":commentId")
+  @UseGuards(IsCommentMineOrAdminGuard)
+  async updateComment(
+    @Body() dto: UpdateCommentReqDto,
+    @Param("commentId", ParseUUIDPipe) commentId: string,
+  ): Promise<CommentsModel> {
+    const comment = await this.commentsService.updateComment(commentId, dto);
+    return comment;
+  }
+
   @Delete(":commentId")
+  @UseGuards(IsCommentMineOrAdminGuard)
   async deleteComment(
     @Param("commentId", ParseUUIDPipe) commentId: string,
     @User("id", ParseUUIDPipe) userId: string,

@@ -14,7 +14,6 @@ import {
 import { PostsService } from "./posts.service";
 import { PostsModel } from "./entities";
 import { CreatePostReqDto, UpdatePostReqDto } from "./dto";
-import { AccessTokenGuard } from "src/auth/guard/bearer-token.guard";
 import { User } from "src/users/decorator";
 import { PaginatePostDto } from "./dto/paginate-post.dto";
 import { UsersModel } from "src/users/entities";
@@ -26,6 +25,7 @@ import { QueryRunner } from "src/common/decorators/query-runner.decorator";
 import { Roles } from "src/users/decorator/roles.decorator";
 import { RolesEnum } from "src/users/const/roles.const";
 import { IsPublic } from "src/common/decorators/is-public.decorator";
+import { IsPostMineOrAdminGuard } from "./guards/is-post-mine-or-admin.guard";
 
 @Controller("posts")
 export class PostsController {
@@ -41,10 +41,10 @@ export class PostsController {
     return this.postsService.paginatePosts(Query);
   }
 
-  @Get(":id")
-  @IsPublic()
+  @Get(":postId")
+  @UseGuards(IsPostMineOrAdminGuard)
   async getPostById(
-    @Param("id", ParseUUIDPipe) id: string,
+    @Param("postId", ParseUUIDPipe) id: string,
   ): Promise<PostsModel> {
     return this.postsService.getPostById(id);
   }
@@ -75,17 +75,17 @@ export class PostsController {
     return this.postsService.getPostById(post.id, qr);
   }
 
-  @Patch(":id")
+  @Patch(":postId")
   async updatePost(
-    @Param("id", ParseUUIDPipe) id: string,
+    @Param("postId", ParseUUIDPipe) id: string,
     @Body() dto: UpdatePostReqDto,
   ): Promise<PostsModel> {
     return await this.postsService.updatePost(id, dto);
   }
 
-  @Delete(":id")
+  @Delete(":postId")
   @Roles(RolesEnum.ADMIN)
-  async deletePost(@Param("id", ParseUUIDPipe) id: string) {
+  async deletePost(@Param("postId", ParseUUIDPipe) id: string) {
     return await this.postsService.deletePost(id);
   }
 

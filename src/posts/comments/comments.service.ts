@@ -37,16 +37,10 @@ export class CommentsService {
     );
   }
 
-  async getCommentById(
-    postId: string,
-    commentId: string,
-  ): Promise<CommentsModel | null> {
+  async getCommentById(commentId: string): Promise<CommentsModel | null> {
     const comment = await this.commentsRepo.findOne({
       where: {
         id: commentId,
-        post: {
-          id: postId,
-        },
       },
       ...DEFAULT_COMMENT_FIND_OPTIONS,
     });
@@ -60,12 +54,16 @@ export class CommentsService {
   }
 
   async createComment(
+    postId: string,
     authorId: string,
     dto: CreateCommentReqDto,
   ): Promise<CommentsModel> {
     const comment = this.commentsRepo.create({
       author: {
         id: authorId,
+      },
+      post: {
+        id: postId,
       },
       ...dto,
     });
@@ -75,17 +73,10 @@ export class CommentsService {
     return newComment;
   }
 
-  async updateComment(
-    commentId: string,
-    authorId: string,
-    dto: UpdateCommentReqDto,
-  ) {
+  async updateComment(commentId: string, dto: UpdateCommentReqDto) {
     const comment = await this.commentsRepo.findOne({
       where: {
         id: commentId,
-        author: {
-          id: authorId,
-        },
       },
     });
 
@@ -112,5 +103,19 @@ export class CommentsService {
     if (!comment) throw new NotFoundException("존재하지 않는 댓글 입니다.");
 
     return await this.commentsRepo.delete(commentId);
+  }
+
+  async isCommentMine(userId: string, commentId: string) {
+    return await this.commentsRepo.exists({
+      where: {
+        id: commentId,
+        author: {
+          id: userId,
+        },
+      },
+      relations: {
+        author: true,
+      },
+    });
   }
 }

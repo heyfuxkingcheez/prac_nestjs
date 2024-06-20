@@ -8,6 +8,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
+  // RBAC Role Based Access Control
   @Roles(RolesEnum.ADMIN)
   async getAllUsers() {
     return await this.usersService.getAllUsers();
