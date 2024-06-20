@@ -12,13 +12,15 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { UsersModule } from "./users/users.module";
 import { AuthModule } from "./auth/auth.module";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { APP_INTERCEPTOR } from "@nestjs/core";
+import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { CommonModule } from "./common/common.module";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { PUBLIC_FOLDER_PATH } from "./common/const/path.const";
 import { LogMiddleWare } from "./common/middlewares/log.middleware";
 import { ChatsModule } from "./chats/chats.module";
 import { CommentsModule } from "./posts/comments/comments.module";
+import { RolesGuard } from "./users/guards/roles.guard";
+import { AccessTokenGuard } from "./auth/guard";
 
 @Module({
   imports: [
@@ -58,6 +60,14 @@ import { CommentsModule } from "./posts/comments/comments.module";
     {
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: AccessTokenGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
   ],
 })

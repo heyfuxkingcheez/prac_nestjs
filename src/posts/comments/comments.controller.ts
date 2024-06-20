@@ -19,6 +19,7 @@ import { User } from "src/users/decorator";
 import { CommentsModel } from "./entities/comment.entity";
 import { UpdateCommentReqDto } from "./dto/update-comment-req.dto";
 import { PaginateCommentsDto } from "./dto/paginate-comment.dto";
+import { IsPublic } from "src/common/decorators/is-public.decorator";
 
 @Controller("posts/:postId/comments")
 export class CommentsController {
@@ -41,6 +42,7 @@ export class CommentsController {
    *  6) DELETE('commentId) 특정 comment 삭제 하는 기능
    */
   @Get()
+  @IsPublic()
   getComments(
     @Param("postId", ParseUUIDPipe) postId: string,
     @Query() dto: PaginateCommentsDto,
@@ -49,6 +51,7 @@ export class CommentsController {
   }
 
   @Get(":commentId")
+  @IsPublic()
   async getCommentById(
     @Param("postId", ParseUUIDPipe) postId: string,
     @Param("commentId", ParseUUIDPipe) commentId: string,
@@ -62,7 +65,6 @@ export class CommentsController {
   }
 
   @Post()
-  @UseGuards(AccessTokenGuard)
   async createComment(
     @Body() dto: CreateCommentReqDto,
     @User("id", ParseUUIDPipe) userId: string,
@@ -72,7 +74,6 @@ export class CommentsController {
   }
 
   @Patch(":commentId")
-  @UseGuards(AccessTokenGuard)
   async updateComment(
     @Body() dto: UpdateCommentReqDto,
     @Param("commentId", ParseUUIDPipe) commentId: string,
@@ -87,7 +88,6 @@ export class CommentsController {
   }
 
   @Delete(":commentId")
-  @UseGuards(AccessTokenGuard)
   async deleteComment(
     @Param("commentId", ParseUUIDPipe) commentId: string,
     @User("id", ParseUUIDPipe) userId: string,

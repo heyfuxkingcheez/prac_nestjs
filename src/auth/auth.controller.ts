@@ -4,12 +4,14 @@ import { RegisterUserReqDto } from "./dto";
 
 import { BsaicTokenGuard } from "./guard/basic-token.guard";
 import { RefreshTokenGuard } from "./guard/bearer-token.guard";
+import { IsPublic } from "src/common/decorators/is-public.decorator";
 
 @Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post("token/access")
+  @IsPublic()
   @UseGuards(RefreshTokenGuard)
   postTokenAccess(@Headers("authorization") rawToken: string) {
     const token = this.authService.extractTokenFromHeader(rawToken, true);
@@ -22,6 +24,7 @@ export class AuthController {
   }
 
   @Post("token/refresh")
+  @IsPublic()
   @UseGuards(RefreshTokenGuard)
   postTokenRefresh(@Headers("authorization") rawToken: string) {
     const token = this.authService.extractTokenFromHeader(rawToken, true);
@@ -34,6 +37,7 @@ export class AuthController {
   }
 
   @Post("login")
+  @IsPublic()
   @UseGuards(BsaicTokenGuard)
   postLoginEamil(@Headers("authorization") rawToken: string) {
     const token = this.authService.extractTokenFromHeader(rawToken, false);
@@ -44,6 +48,7 @@ export class AuthController {
   }
 
   @Post("register")
+  @IsPublic()
   postRegisterEmail(@Body() dto: RegisterUserReqDto) {
     return this.authService.registerWithEmail(dto);
   }

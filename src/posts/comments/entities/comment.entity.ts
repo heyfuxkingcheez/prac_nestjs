@@ -9,11 +9,13 @@ import { Column, Entity, ManyToOne } from "typeorm";
 export class CommentsModel extends BaseModel {
   @ManyToOne(() => UsersModel, user => user.postComments, {
     nullable: false,
+    onDelete: "CASCADE",
   })
   author: UsersModel;
 
   @ManyToOne(() => PostsModel, post => post.comments, {
     nullable: false,
+    onDelete: "CASCADE",
   })
   post: PostsModel;
 

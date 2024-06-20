@@ -63,7 +63,9 @@ export class UsersModel extends BaseModel {
   })
   role: RolesEnum;
 
-  @OneToMany(() => PostsModel, post => post.author)
+  @OneToMany(() => PostsModel, post => post.author, {
+    cascade: true,
+  })
   posts: PostsModel[];
 
   @ManyToMany(() => ChatsModel, chat => chat.users)
@@ -73,6 +75,8 @@ export class UsersModel extends BaseModel {
   @OneToMany(() => MessagesModel, message => message.author)
   messages: MessagesModel;
 
-  @OneToMany(() => CommentsModel, comment => comment.author)
+  @OneToMany(() => CommentsModel, comment => comment.author, {
+    cascade: true,
+  })
   postComments: CommentsModel[];
 }

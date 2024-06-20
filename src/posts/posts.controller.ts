@@ -25,6 +25,7 @@ import { TransactionInterceptor } from "src/common/interceptors/transaction.inte
 import { QueryRunner } from "src/common/decorators/query-runner.decorator";
 import { Roles } from "src/users/decorator/roles.decorator";
 import { RolesEnum } from "src/users/const/roles.const";
+import { IsPublic } from "src/common/decorators/is-public.decorator";
 
 @Controller("posts")
 export class PostsController {
@@ -34,11 +35,14 @@ export class PostsController {
   ) {}
 
   @Get()
+  @IsPublic()
   // @UseInterceptors(LogInterceptor)
   getAllPosts(@Query() Query: PaginatePostDto) {
     return this.postsService.paginatePosts(Query);
   }
+
   @Get(":id")
+  @IsPublic()
   async getPostById(
     @Param("id", ParseUUIDPipe) id: string,
   ): Promise<PostsModel> {
@@ -46,7 +50,6 @@ export class PostsController {
   }
 
   @Post()
-  @UseGuards(AccessTokenGuard)
   @UseInterceptors(TransactionInterceptor)
   async createPost(
     @Body() dto: CreatePostReqDto,
@@ -73,7 +76,6 @@ export class PostsController {
   }
 
   @Patch(":id")
-  @UseGuards(AccessTokenGuard)
   async updatePost(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() dto: UpdatePostReqDto,
@@ -82,7 +84,6 @@ export class PostsController {
   }
 
   @Delete(":id")
-  @UseGuards(AccessTokenGuard)
   @Roles(RolesEnum.ADMIN)
   async deletePost(@Param("id", ParseUUIDPipe) id: string) {
     return await this.postsService.deletePost(id);
@@ -90,7 +91,6 @@ export class PostsController {
 
   // 포스트 생성기 테스트용
   @Post("random")
-  @UseGuards(AccessTokenGuard)
   async postPostsRandom(@User() user: UsersModel) {
     await this.postsService.generatePosts(user.id);
 
