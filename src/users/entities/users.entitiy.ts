@@ -12,6 +12,7 @@ import { BaseModel } from "src/common/entities";
 import { ChatsModel } from "src/chats/entitiies/chats.entity";
 import { MessagesModel } from "src/chats/messages/entities/messages.entity";
 import { CommentsModel } from "src/posts/comments/entities/comment.entity";
+import { UserFollowersModel } from "./user-followers.entity";
 
 @Entity()
 export class UsersModel extends BaseModel {
@@ -79,4 +80,11 @@ export class UsersModel extends BaseModel {
     cascade: true,
   })
   postComments: CommentsModel[];
+
+  @OneToMany(() => UserFollowersModel, ufm => ufm.follower, { cascade: true })
+  @JoinTable()
+  followers: UserFollowersModel[];
+
+  @OneToMany(() => UserFollowersModel, ufm => ufm.followee, { cascade: true })
+  followees: UserFollowersModel[];
 }
