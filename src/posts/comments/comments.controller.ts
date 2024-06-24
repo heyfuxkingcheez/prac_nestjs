@@ -3,17 +3,15 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
 import { CommentsService } from "./comments.service";
-import { AccessTokenGuard } from "src/auth/guard";
 import { CreateCommentReqDto } from "./dto/create-comment-req.dto";
 import { User } from "src/users/decorator";
 import { CommentsModel } from "./entities/comment.entity";
@@ -21,10 +19,17 @@ import { UpdateCommentReqDto } from "./dto/update-comment-req.dto";
 import { PaginateCommentsDto } from "./dto/paginate-comment.dto";
 import { IsPublic } from "src/common/decorators/is-public.decorator";
 import { IsCommentMineOrAdminGuard } from "./guards/is-comment-mine-or-admin.guard";
+import { TransactionInterceptor } from "src/common/interceptors/transaction.interceptor";
+import { QueryRunner } from "src/common/decorators/query-runner.decorator";
+import { QueryRunner as QR } from "typeorm";
+import { PostsService } from "src/posts/posts.service";
 
 @Controller("posts/:postId/comments")
 export class CommentsController {
-  constructor(private readonly commentsService: CommentsService) {}
+  constructor(
+    private readonly commentsService: CommentsService,
+    private readonly postsService: PostsService,
+  ) {}
   /**
    *  1) Entity 생성
    *  author -> 작성자
@@ -62,16 +67,21 @@ export class CommentsController {
   }
 
   @Post()
+  @UseInterceptors(TransactionInterceptor)
   async createComment(
     @Param("postId", ParseUUIDPipe) postId: string,
     @Body() dto: CreateCommentReqDto,
     @User("id", ParseUUIDPipe) userId: string,
+    @QueryRunner() qr: QR,
   ): Promise<CommentsModel> {
     const comment = await this.commentsService.createComment(
       postId,
       userId,
       dto,
+      qr,
     );
+
+    await this.postsService.incrementCommentCount(postId, qr);
     return comment;
   }
 
@@ -87,11 +97,20 @@ export class CommentsController {
 
   @Delete(":commentId")
   @UseGuards(IsCommentMineOrAdminGuard)
+  @UseInterceptors(TransactionInterceptor)
   async deleteComment(
+    @Param("postId", ParseUUIDPipe) postId: string,
     @Param("commentId", ParseUUIDPipe) commentId: string,
     @User("id", ParseUUIDPipe) userId: string,
+    @QueryRunner() qr: QR,
   ) {
-    const comment = await this.commentsService.deleteComment(commentId, userId);
+    const comment = await this.commentsService.deleteComment(
+      commentId,
+      userId,
+      qr,
+    );
+
+    await this.postsService.decrementCommentCount(postId, qr);
 
     return { HttpCode: 200, HttpStatus: "OK", message: "삭제 완료" };
   }

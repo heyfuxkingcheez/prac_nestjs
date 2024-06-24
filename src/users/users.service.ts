@@ -5,7 +5,7 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UsersModel } from "./entities/users.entitiy";
-import { Repository } from "typeorm";
+import { QueryRunner, Repository } from "typeorm";
 import { UserFollowersModel } from "./entities";
 
 @Injectable()
@@ -16,6 +16,18 @@ export class UsersService {
     @InjectRepository(UserFollowersModel)
     private readonly userFollowersRepo: Repository<UserFollowersModel>,
   ) {}
+
+  getUsersRepository(qr?: QueryRunner) {
+    return qr
+      ? qr.manager.getRepository<UsersModel>(UsersModel)
+      : this.userRepo;
+  }
+
+  getUserFollowersRepository(qr?: QueryRunner) {
+    return qr
+      ? qr.manager.getRepository<UserFollowersModel>(UserFollowersModel)
+      : this.userFollowersRepo;
+  }
 
   async createUser(user: Pick<UsersModel, "email" | "nickname" | "password">) {
     const nicknameExists = await this.userRepo.exists({
@@ -63,13 +75,15 @@ export class UsersService {
     });
   }
 
-  async followUser(followerId: string, followeeId: string) {
-    const result = await this.userFollowersRepo.save({
+  async followUser(followerId: string, followingId: string, qr?: QueryRunner) {
+    const userFollowersRepository = this.getUserFollowersRepository(qr);
+
+    const result = await userFollowersRepository.save({
       follower: {
         id: followerId,
       },
-      followee: {
-        id: followeeId,
+      following: {
+        id: followingId,
       },
     });
 
@@ -78,7 +92,7 @@ export class UsersService {
 
   async getFollowers(userId: string, includeNotConfirmed: boolean) {
     const where = {
-      followee: {
+      following: {
         id: userId,
       },
     };
@@ -91,7 +105,7 @@ export class UsersService {
       where,
       relations: {
         follower: true,
-        followee: true,
+        following: true,
       },
     });
     return result.map(x => ({
@@ -104,19 +118,22 @@ export class UsersService {
 
   async confirmFollow(
     followerId: string,
-    followeeId: string,
+    followingId: string,
+    qr?: QueryRunner,
   ): Promise<boolean> {
-    const existing = await this.userFollowersRepo.findOne({
+    const userFollowersRepository = this.getUserFollowersRepository(qr);
+
+    const existing = await userFollowersRepository.findOne({
       where: {
         follower: {
           id: followerId,
         },
-        followee: {
-          id: followeeId,
+        following: {
+          id: followingId,
         },
       },
       relations: {
-        followee: true,
+        following: true,
         follower: true,
       },
     });
@@ -124,7 +141,7 @@ export class UsersService {
     if (!existing)
       throw new NotFoundException("존재하지 않는 팔로우 요청입니다.");
 
-    await this.userFollowersRepo.save({
+    await userFollowersRepository.save({
       ...existing,
       isConfirmed: true,
     });
@@ -132,16 +149,46 @@ export class UsersService {
     return true;
   }
 
-  async deleteFollow(followerId: string, followeeId: string) {
-    await this.userFollowersRepo.delete({
+  async deleteFollow(
+    followerId: string,
+    followingId: string,
+    qr?: QueryRunner,
+  ) {
+    const userFollowersRepository = this.getUserFollowersRepository(qr);
+
+    await userFollowersRepository.delete({
       follower: {
         id: followerId,
       },
-      followee: {
-        id: followeeId,
+      following: {
+        id: followingId,
       },
     });
 
     return true;
+  }
+
+  async incrementFollowerCount(userId: string, qr?: QueryRunner) {
+    const userRepository = this.getUsersRepository(qr);
+
+    await userRepository.increment(
+      {
+        id: userId,
+      },
+      "followerCount",
+      1,
+    );
+  }
+
+  async decrementFollowerCount(userId: string, qr?: QueryRunner) {
+    const userRepository = this.getUsersRepository(qr);
+
+    await userRepository.decrement(
+      {
+        id: userId,
+      },
+      "followerCount",
+      1,
+    );
   }
 }

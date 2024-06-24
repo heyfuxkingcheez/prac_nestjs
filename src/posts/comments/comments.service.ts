@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common";
 import { CommonService } from "src/common/common.service";
 import { CreateCommentReqDto } from "./dto/create-comment-req.dto";
-import { Repository } from "typeorm";
+import { QueryRunner, Repository } from "typeorm";
 import { CommentsModel } from "./entities/comment.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UpdateCommentReqDto } from "./dto/update-comment-req.dto";
@@ -20,6 +20,12 @@ export class CommentsService {
     private readonly commentsRepo: Repository<CommentsModel>,
     private readonly commonService: CommonService,
   ) {}
+
+  getRepository(qr?: QueryRunner) {
+    return qr
+      ? qr.manager.getRepository<CommentsModel>(CommentsModel)
+      : this.commentsRepo;
+  }
 
   paginateComments(dto: PaginateCommentsDto, postId: string) {
     return this.commonService.paginate(
@@ -57,8 +63,11 @@ export class CommentsService {
     postId: string,
     authorId: string,
     dto: CreateCommentReqDto,
+    qr?: QueryRunner,
   ): Promise<CommentsModel> {
-    const comment = this.commentsRepo.create({
+    const repository = this.getRepository(qr);
+
+    const comment = repository.create({
       author: {
         id: authorId,
       },
@@ -90,8 +99,10 @@ export class CommentsService {
     return await this.commentsRepo.save(updatedComment);
   }
 
-  async deleteComment(commentId: string, authorId: string) {
-    const comment = await this.commentsRepo.findOne({
+  async deleteComment(commentId: string, authorId: string, qr?: QueryRunner) {
+    const repository = this.getRepository(qr);
+
+    const comment = await repository.findOne({
       where: {
         id: commentId,
         author: {

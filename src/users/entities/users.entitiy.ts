@@ -85,6 +85,12 @@ export class UsersModel extends BaseModel {
   @JoinTable()
   followers: UserFollowersModel[];
 
-  @OneToMany(() => UserFollowersModel, ufm => ufm.followee, { cascade: true })
-  followees: UserFollowersModel[];
+  @OneToMany(() => UserFollowersModel, ufm => ufm.following, { cascade: true })
+  followings: UserFollowersModel[];
+
+  @Column({ default: 0 })
+  followerCount: number;
+
+  @Column({ default: 0 })
+  followingCount: number;
 }

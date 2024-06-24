@@ -9,11 +9,15 @@ import {
   Patch,
   Post,
   Query,
+  UseInterceptors,
 } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { Roles } from "./decorator/roles.decorator";
 import { RolesEnum } from "./const/roles.const";
 import { User } from "./decorator";
+import { TransactionInterceptor } from "src/common/interceptors/transaction.interceptor";
+import { QueryRunner as QR } from "typeorm";
+import { QueryRunner } from "src/common/decorators/query-runner.decorator";
 
 @Controller("users")
 export class UsersController {
@@ -38,29 +42,37 @@ export class UsersController {
   @Post("follow/:userId")
   async createFollow(
     @User("id", ParseUUIDPipe) userId: string,
-    @Param("userId", ParseUUIDPipe) followeeId: string,
+    @Param("userId", ParseUUIDPipe) followingId: string,
   ) {
-    await this.usersService.followUser(userId, followeeId);
+    await this.usersService.followUser(userId, followingId);
 
     return true;
   }
 
   @Patch("follow/:followerId/confirm")
+  @UseInterceptors(TransactionInterceptor)
   async patchFollowConfirm(
-    @User("id", ParseUUIDPipe) followeeId: string,
+    @User("id", ParseUUIDPipe) followingId: string,
     @Param("followerId", ParseUUIDPipe) followerId: string,
+    @QueryRunner() qr: QR,
   ) {
-    this.usersService.confirmFollow(followerId, followeeId);
+    await this.usersService.confirmFollow(followerId, followingId, qr);
+
+    await this.usersService.incrementFollowerCount(followingId, qr);
 
     return true;
   }
 
-  @Delete("follow/:followeeId")
+  @Delete("follow/:followingId")
+  @UseInterceptors(TransactionInterceptor)
   async deleteFollow(
     @User("id") userId: string,
-    @Param("followeeId", ParseUUIDPipe) followeeId: string,
+    @Param("followingId", ParseUUIDPipe) followingId: string,
+    @QueryRunner() qr: QR,
   ) {
-    this.usersService.deleteFollow(userId, followeeId);
+    await this.usersService.deleteFollow(userId, followingId, qr);
+
+    await this.usersService.decrementFollowerCount(followingId, qr);
 
     return true;
   }

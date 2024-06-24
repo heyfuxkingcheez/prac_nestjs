@@ -7,8 +7,8 @@ export class UserFollowersModel extends BaseModel {
   @ManyToOne(() => UsersModel, user => user.followers)
   follower: UsersModel;
 
-  @ManyToOne(() => UsersModel, user => user.followees)
-  followee: UsersModel;
+  @ManyToOne(() => UsersModel, user => user.followings)
+  following: UsersModel;
 
   @Column({ default: false })
   isConfirmed: boolean;
